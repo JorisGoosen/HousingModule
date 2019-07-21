@@ -1,0 +1,25 @@
+{
+	"moduleDescription" :
+	{
+		"title":				"Housing Module",
+		"icon": 				"house.svg",
+		"description": 			"A module that helps you figure out wheteher renting or buying a house with a mortgage.",
+		"version":				"1.0",
+		"author":				"Joris Goosen",
+		"maintainer":			"Joris Goosen <Joris@JorisGoosen.nl>",
+		"website":				"https://github.com/JorisGoosen/HousingModule",
+		"license":				"GPL V3",
+		"requiresDataset": 		false
+	},
+
+	"requiredPackages":	[],
+
+	"menu":
+	[
+		{
+			"title":							"Mortgage/Rent Comparison",
+			"qml":								"house.qml",
+			"function":							"houseFunc"
+		}
+	]
+}
