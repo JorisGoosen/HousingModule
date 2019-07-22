@@ -9,15 +9,15 @@ mortgageTable <- function(jaspResults, options)
   if(!is.null(jaspResults[["mortgageTable"]])) return();
 
   moneyFormat <- "dp:0"
-  table       <- createJaspTable(title="Overview", position=2, dependencies=c("housePrice", "interest", "linear", "years", "rent", "perYear", "rentIncrease", "taxesToo", "taxRate", "forfait"));
+  table       <- createJaspTable(title="Overview", position=2, dependencies=c("housePrice", "interest", "linear", "years", "rent", "perYear", "rentIncrease", "taxesToo", "taxRate", "forfait", "wozWaarde"));
     
                         table$addColumnInfo(name="year",      title="Year"                                   )
   if(!options$perYear)  table$addColumnInfo(name="month",     title="Month"                                  )
                         table$addColumnInfo(name="principal", title="Principal",              format=moneyFormat )
                         table$addColumnInfo(name="interest",  title="Interest Payment",       format=moneyFormat )
                         table$addColumnInfo(name="payment",   title="Principal Payment",      format=moneyFormat )
-  #if(options$taxesToo){ table$addColumnInfo(name="toPay",     title="Total Payment (gross)",  format=moneyFormat )
-  #                      table$addColumnInfo(name="toPayNet",  title="Total Payment (net)",    format=moneyFormat ) } else
+  if(options$taxesToo){ table$addColumnInfo(name="toPay",     title="Total Payment (gross)",  format=moneyFormat )
+                        table$addColumnInfo(name="toPayNet",  title="Total Payment (net)",    format=moneyFormat ) } else
                         table$addColumnInfo(name="toPay",     title="Total Payment",          format=moneyFormat )
                         table$addColumnInfo(name="rent",      title="Rent Payment",           format=moneyFormat )
 
@@ -46,11 +46,15 @@ mortgagePlot <- function(jaspResults, options)
   ySteps     <- seq(minMoney, maxMoney, roundMoney)
   xSteps     <- options$years
 
+  netMortSeries   <- -1 * c(0, mortgageDF$totalIntPay - mortgageDF$totalTax)
   mortgageSeries  <- -1 * c(0, mortgageDF$totalIntPay)
   rentSeries      <- -1 * c(0, mortgageDF$totalRent)
   profitSeries    <- c(0, mortgageDF$totalPay) - options$lossOnSale
-  
-  p          <- JASPgraphs::drawAxis(xName="Year", yName="Money", force = TRUE, yBreaks=ySteps, xBreaks=0:xSteps, yLabels=moneyFormat(ySteps), xLabels=0:xSteps ) +
+
+  if(options$taxesToo) mortgageSeries <- netMortSeries
+
+  # Make the plot:
+  p               <- JASPgraphs::drawAxis(xName="Year", yName="Money", force = TRUE, yBreaks=ySteps, xBreaks=0:xSteps, yLabels=moneyFormat(ySteps), xLabels=0:xSteps ) +
 
     ggplot2::geom_line(data=data.frame(x=c(0, mortgageDF$month / 12), y=mortgageSeries ), mapping=ggplot2::aes(x=x, y=y, colour="mortgage") )  +
     ggplot2::geom_line(data=data.frame(x=c(0, mortgageDF$month / 12), y=rentSeries     ), mapping=ggplot2::aes(x=x, y=y, colour="rent")     )  +
@@ -61,7 +65,7 @@ mortgagePlot <- function(jaspResults, options)
       labels=c('mortgage'="Payments to Mortgage", 'rent'="Payments to Landlord",  'profit'=paste0("Profit despite ",moneyFormat(options$lossOnSale), " loss")))
   
   p          <- JASPgraphs::themeJasp(p, legend.position="right", legend.title="Legend")
-  plot       <- createJaspPlot(plot=p, title="Mortgage vs Rent over Time", width=1200, height=400, position=1, dependencies=c("housePrice", "interest", "linear", "years", "rent", "rentIncrease", "lossOnSale", "taxesToo", "taxRate", "forfait"))
+  plot       <- createJaspPlot(plot=p, title="Mortgage vs Rent over Time", width=1200, height=400, position=1, dependencies=c("housePrice", "interest", "linear", "years", "rent", "rentIncrease", "lossOnSale", "taxesToo", "taxRate", "forfait", "wozWaarde"))
   
   jaspResults[["mortgagePlot"]] <- plot
 }
@@ -80,7 +84,8 @@ generateMortgageData <- function(options, perYear, paymentFunc)
   interest  <- options$interest
   years     <- options$years
   months    <- years * 12
-
+  taxRate   <- options$taxRate
+  forfait   <- (options$wozWaarde * options$forfait) / 12
   principal <- loan
   rent      <- options$rent
 
@@ -89,10 +94,12 @@ generateMortgageData <- function(options, perYear, paymentFunc)
   totalPay  <- 0
   totalRent <- 0
   totalInt  <- 0
+  totalTax  <- 0
 
   intYear   <- 0
   payYear   <- 0
   rentYear  <- 0
+  taxYear   <- 0
   princYear <- principal
 
   monthCnt  <- months
@@ -104,6 +111,7 @@ generateMortgageData <- function(options, perYear, paymentFunc)
     year      <- 1 + (month / 12)
     intMonth  <- calculateInterestPerMonth(principal, interest)
     payMonth  <- paymentFunc(principal)
+    taxMonth  <- (intMonth - forfait) * taxRate
 
     if(isNewYear) rent <- rent * (1 + options$rentIncrease)
 
@@ -115,18 +123,26 @@ generateMortgageData <- function(options, perYear, paymentFunc)
       totalPay  <- totalPay  + payMonth
       totalRent <- totalRent + rent
       totalInt  <- totalInt  + intMonth
+      totalTax  <- totalTax  + taxMonth
 
-      newRow    <- list(year=year, month=month + 1, principal=principal, interest=intMonth, payment=payMonth, toPay=intMonth + payMonth, rent=rent, totalPay=totalPay, totalIntPay=totalPay+totalInt, totalRent=totalRent, totalInterest=totalInt, totalSavedRent=totalRent-totalPay, .isNewGroup=isNewYear)
+      grossPay  <- intMonth + payMonth
+      netPay    <- grossPay - taxMonth
+
+      newRow    <- list(year=year, month=month + 1, principal=principal, interest=intMonth, payment=payMonth, toPay=grossPay, toPayNet=netPay, rent=rent, totalPay=totalPay, totalIntPay=totalPay+totalInt, totalRent=totalRent, totalInterest=totalInt, totalTax=totalTax, .isNewGroup=isNewYear)
       outDF     <- rbind(outDF, newRow)
-    } else 
-    {
+    
+    } else {
+    
       if(isNewYear && month > 0)
       {
         totalPay  <- totalPay  + payYear
         totalRent <- totalRent + rentYear
         totalInt  <- totalInt  + intYear
+        totalTax  <- totalTax  + taxYear
 
-        newRow    <- list(year=year - 1, month=month + 1, principal=princYear, interest=intYear, payment=payYear, toPay=intYear + payYear, rent=rentYear, totalPay=totalPay, totalIntPay=totalPay+totalInt, totalRent=totalRent, totalInterest=totalInt, totalSavedRent=totalRent-totalPay, .isNewGroup=isNewYear)
+        grossPay  <- intYear + payYear
+        netPay    <- grossPay - taxYear
+        newRow    <- list(year=year - 1, month=month + 1, principal=princYear, interest=intYear, payment=payYear, toPay=grossPay, toPayNet=netPay, rent=rentYear, totalPay=totalPay, totalIntPay=totalPay+totalInt, totalRent=totalRent, totalInterest=totalInt, totalTax=totalTax, .isNewGroup=isNewYear)
         outDF     <- rbind(outDF, newRow)
 
         princYear <- princYear - payYear
@@ -134,11 +150,13 @@ generateMortgageData <- function(options, perYear, paymentFunc)
         intYear   <- 0
         payYear   <- 0
         rentYear  <- 0
+        taxYear   <- 0
       }
 
       intYear   <- intYear  + intMonth
       payYear   <- payYear  + payMonth
       rentYear  <- rentYear + rent
+      taxYear   <- taxYear  + taxMonth
     }
 
    
@@ -187,5 +205,5 @@ genCalculateAnnuityPaymentPerMonthFunction <- function(options)
 
 calculateTotalRow <- function(mortgageDF)
 {
-  return(list(year="Total:", month="", principal="", interest=sum(mortgageDF$interest), payment=sum(mortgageDF$payment), toPay=sum(mortgageDF$toPay), rent=sum(mortgageDF$rent), .isNewGroup=TRUE))
+  return(list(year="Total:", month="", principal="", interest=sum(mortgageDF$interest), payment=sum(mortgageDF$payment), toPay=sum(mortgageDF$toPay), toPayNet=sum(mortgageDF$toPayNet), rent=sum(mortgageDF$rent), .isNewGroup=TRUE))
 }

@@ -115,7 +115,6 @@ Form
 		}
 	}
 
-/*
 	GroupBox
 	{
 		title: 		"Taxes & Death"
@@ -135,11 +134,24 @@ Form
 
 		PercentField
 		{
-			name:			"taxrate"
+			name:			"taxRate"
 			defaultValue:	40
 			text:			"Tax rate: "
 			fieldWidth:		100
+			decimals:		2
 			enabled:		taxesToo.checked
+		}
+
+		IntegerField
+		{
+			name:			"wozWaarde"
+			defaultValue:	housePrice.value
+			min:			0
+			max:			1000000000
+			text:			"WOZ: "
+			fieldWidth:		100
+			enabled:		taxesToo.checked
+			toolTip:		"Waardering ontroerende zaken, a dutch way for the state to estimate what a property is \"worth\""
 		}
 
 		PercentField
@@ -148,7 +160,8 @@ Form
 			defaultValue:	0.75
 			text:			"Eigen Woning Forfait: "
 			fieldWidth:		100
+			decimals:		2
 			enabled:		taxesToo.checked
 		}
-	} */
+	} 
 }

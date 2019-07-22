@@ -1,9 +1,10 @@
 {
 	"moduleDescription" :
 	{
+		"name":					"HousingModule",
 		"title":				"Housing Module",
 		"icon": 				"house.svg",
-		"description": 			"A module that helps you figure out wheteher renting or buying a house with a mortgage.",
+		"description": 			"A module that helps you figure out whether renting or buying a house with a mortgage is a more economical choice.",
 		"version":				"1.0",
 		"author":				"Joris Goosen",
 		"maintainer":			"Joris Goosen <Joris@JorisGoosen.nl>",
@@ -12,7 +13,9 @@
 		"requiresDataset": 		false
 	},
 
-	"requiredPackages":	[],
+	"requiredPackages":	[ ],
+
+	
 
 	"menu":
 	[
