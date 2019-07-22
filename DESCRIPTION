@@ -1,0 +1,10 @@
+Package: HousingModule
+Type: Package
+Title: Housing Module Module for JASP
+Version: 1.0
+Date: 2019-07-22
+Author: Joris Goosen
+Website: https://github.com/JorisGoosen/HousingModule
+Maintainer: Joris Goosen <Joris@JorisGoosen.nl>
+Description: A module that helps you figure out wheteher renting or buying a house with a mortgage.
+License: GPL V3
