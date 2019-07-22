@@ -9,15 +9,17 @@ mortgageTable <- function(jaspResults, options)
   if(!is.null(jaspResults[["mortgageTable"]])) return();
 
   moneyFormat <- "dp:0"
-  table       <- createJaspTable(title="Overview", position=2, dependencies=c("housePrice", "interest", "linear", "years", "rent", "perYear", "rentIncrease"));
+  table       <- createJaspTable(title="Overview", position=2, dependencies=c("housePrice", "interest", "linear", "years", "rent", "perYear", "rentIncrease", "taxesToo", "taxRate", "forfait"));
     
                         table$addColumnInfo(name="year",      title="Year"                                   )
   if(!options$perYear)  table$addColumnInfo(name="month",     title="Month"                                  )
-                        table$addColumnInfo(name="principal", title="Principal",          format=moneyFormat )
-                        table$addColumnInfo(name="interest",  title="Interest Payment",   format=moneyFormat )
-                        table$addColumnInfo(name="payment",   title="Principal Payment",  format=moneyFormat )
-                        table$addColumnInfo(name="toPay",     title="Total Payment",      format=moneyFormat )
-                        table$addColumnInfo(name="rent",      title="Rent Payment",       format=moneyFormat )
+                        table$addColumnInfo(name="principal", title="Principal",              format=moneyFormat )
+                        table$addColumnInfo(name="interest",  title="Interest Payment",       format=moneyFormat )
+                        table$addColumnInfo(name="payment",   title="Principal Payment",      format=moneyFormat )
+  #if(options$taxesToo){ table$addColumnInfo(name="toPay",     title="Total Payment (gross)",  format=moneyFormat )
+  #                      table$addColumnInfo(name="toPayNet",  title="Total Payment (net)",    format=moneyFormat ) } else
+                        table$addColumnInfo(name="toPay",     title="Total Payment",          format=moneyFormat )
+                        table$addColumnInfo(name="rent",      title="Rent Payment",           format=moneyFormat )
 
   table$showSpecifiedColumnsOnly  <- TRUE
   jaspResults[["mortgageTable"]]  <- table
@@ -53,11 +55,13 @@ mortgagePlot <- function(jaspResults, options)
     ggplot2::geom_line(data=data.frame(x=c(0, mortgageDF$month / 12), y=mortgageSeries ), mapping=ggplot2::aes(x=x, y=y, colour="mortgage") )  +
     ggplot2::geom_line(data=data.frame(x=c(0, mortgageDF$month / 12), y=rentSeries     ), mapping=ggplot2::aes(x=x, y=y, colour="rent")     )  +
     ggplot2::geom_line(data=data.frame(x=c(0, mortgageDF$month / 12), y=profitSeries   ), mapping=ggplot2::aes(x=x, y=y, colour="profit")   )  +
-    ggplot2::geom_line(data=data.frame(x=c(0, options$years),   y=c(0, 0)),                                               mapping=ggplot2::aes(x=x, y=y), colour="grey", linetype=2 ) +
-    ggplot2::scale_colour_manual(name="", values=c('mortgage'='red', 'rent'='black', 'profit'='blue'), labels=c('mortgage'="Payments to Mortgage", 'rent'="Payments to Landlord", 'profit'=paste0("Profit despite ",moneyFormat(options$lossOnSale), " loss")))
+    ggplot2::geom_line(data=data.frame(x=c(0, options$years),   y=c(0, 0)),               mapping=ggplot2::aes(x=x, y=y), colour="grey", linetype=2 ) +
+    ggplot2::scale_colour_manual(name="", 
+      values=c('mortgage'='red',                  'rent'='black',                 'profit'='blue'), 
+      labels=c('mortgage'="Payments to Mortgage", 'rent'="Payments to Landlord",  'profit'=paste0("Profit despite ",moneyFormat(options$lossOnSale), " loss")))
   
   p          <- JASPgraphs::themeJasp(p, legend.position="right", legend.title="Legend")
-  plot       <- createJaspPlot(plot=p, title="Mortgage vs Rent over Time", width=1200, height=400, position=1, dependencies=c("housePrice", "interest", "linear", "years", "rent", "rentIncrease", "lossOnSale"))
+  plot       <- createJaspPlot(plot=p, title="Mortgage vs Rent over Time", width=1200, height=400, position=1, dependencies=c("housePrice", "interest", "linear", "years", "rent", "rentIncrease", "lossOnSale", "taxesToo", "taxRate", "forfait"))
   
   jaspResults[["mortgagePlot"]] <- plot
 }

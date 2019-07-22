@@ -36,9 +36,19 @@ Form
 			min:			0
 			max:			1000000000
 			text:			"House Price: "
-			fieldWidth:		200
+			fieldWidth:		100
 			toolTip:		"How big will the mortgage be?"
 		}
+
+		IntegerField
+		{
+			name:			"lossOnSale"
+			defaultValue:	0
+			min:			0
+			max:			parseFloat(housePrice.value)
+			text:			"Loss on sale: "
+			fieldWidth:		100
+		}	
 		
 		IntegerField
 		{
@@ -66,16 +76,7 @@ Form
 			checked: 	true
 			text:		"Linear Mortgage?"
 		}
-
-		DoubleField
-		{
-			name:			"lossOnSale"
-			defaultValue:	0
-			min:			0
-			max:			parseFloat(housePrice.value)
-			text:			"Loss on sale: "
-			fieldWidth:		100
-		}		
+	
 	}
 
 	GroupBox
@@ -114,6 +115,7 @@ Form
 		}
 	}
 
+/*
 	GroupBox
 	{
 		title: 		"Taxes & Death"
@@ -148,5 +150,5 @@ Form
 			fieldWidth:		100
 			enabled:		taxesToo.checked
 		}
-	}
+	} */
 }
