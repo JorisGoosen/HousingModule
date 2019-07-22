@@ -26,6 +26,8 @@ Form
 
 	GroupBox
 	{
+		title:		"Mortgage"
+		
 		IntegerField
 		{
 			id:				housePrice
@@ -35,6 +37,7 @@ Form
 			max:			1000000000
 			text:			"House Price: "
 			fieldWidth:		200
+			toolTip:		"How big will the mortgage be?"
 		}
 		
 		IntegerField
@@ -54,42 +57,96 @@ Form
 			defaultValue:	2
 			text:			"Interest: "
 			fieldWidth:		housePrice.fieldWidth
+			toolTip:		"What will be your yearly interest?"
 		}
+
+		CheckBox
+		{
+			name: 		"linear"
+			checked: 	true
+			text:		"Linear Mortgage?"
+		}
+
+		DoubleField
+		{
+			name:			"lossOnSale"
+			defaultValue:	0
+			min:			0
+			max:			parseFloat(housePrice.value)
+			text:			"Loss on sale: "
+			fieldWidth:		100
+		}		
 	}
 
 	GroupBox
 	{
-		/*PercentField
-		{
-			id:				taxRate
-			name:			"taxrate"
-			defaultValue:	40
-			text:			"Tax rate: "
-			fieldWidth:		100
-		}*/
+		title:	"Renting"
 
 		DoubleField
 		{
+			id:				rent
 			name:			"rent"
 			defaultValue:	1300
 			min:			0
 			max:			10000
 			text:			"Rent: "
-			fieldWidth:		taxRate.fieldWidth
+			fieldWidth:		100
+		}
+
+		PercentField
+		{
+			name:			"rentIncrease"
+			defaultValue:	0
+			text:			"Rent increase/year: "
+			fieldWidth:		100
 		}
 	}
 
-    CheckBox
-    {
-        name: 		"linear"
-        checked: 	true
-		text:		"Linear Mortgage?"
-    }
+	GroupBox
+	{
+		title:		"Table Options"
 
-	CheckBox
-    {
-        name: 		"perYear"
-        checked: 	true
-		text:		"Only years?"
-    }
+		CheckBox
+		{
+			name: 		"perYear"
+			checked: 	true
+			text:		"Yearly overview"
+		}
+	}
+
+	GroupBox
+	{
+		title: 		"Taxes & Death"
+
+		Label
+		{
+			text: "<i>Quite specific to the Netherlands</i>"
+		}
+
+		CheckBox
+		{
+			id:			taxesToo
+			name: 		"taxesToo"
+			text:		"Take taxes into account for profit"
+			checked: 	false 
+		}
+
+		PercentField
+		{
+			name:			"taxrate"
+			defaultValue:	40
+			text:			"Tax rate: "
+			fieldWidth:		100
+			enabled:		taxesToo.checked
+		}
+
+		PercentField
+		{
+			name:			"forfait"
+			defaultValue:	0.75
+			text:			"Eigen Woning Forfait: "
+			fieldWidth:		100
+			enabled:		taxesToo.checked
+		}
+	}
 }
